@@ -123,7 +123,7 @@ const TOUR=[
  {e:"💬",t:"Bantuan",d:"Cara penggunaan lengkap, pertanyaan umum, dan tombol konsultasi lewat WhatsApp.",tab:"bantuan"}];
 let tour=null,lic=LICENSE_URL?null:{ok:true,demo:true};
 const TSEL=["#hd",".hero",".fab",'.nav button[data-v="piutang"]','.nav button[data-v="riwayat"]','.nav button[data-v="atur"]','.nav button[data-v="bantuan"]'];
-const PLANS=[{n:"1 bulan",h:5000,per:"Rp5.000 per bulan"},{n:"6 bulan",h:20000,per:"Rp3.333 per bulan",hemat:"Hemat 33%"},{n:"1 tahun",h:30000,per:"Rp2.500 per bulan",hemat:"Hemat 50%"}];
+const PLANS=[{n:"1 bulan",h:9900,per:"Rp9.900 per bulan (sekitar Rp330 per hari)"},{n:"6 bulan",h:49000,per:"Rp8.167 per bulan",hemat:"Hemat 17%"},{n:"1 tahun",h:89000,per:"Rp7.417 per bulan",hemat:"Hemat 25%"}];
 let up=null,trialOpen=false,priv=false;
 function upHtml(){const pl=PLANS[up],msg=encodeURIComponent(`Halo, saya mau upgrade Napas paket ${pl.n} (${rp(pl.h)}). Kode akses: ${(lic&&lic.kode)||"-"}.`);
  return`<div class="sheet" data-act="upclose"><div data-stop><div class="row"><h2 style="margin:0">Upgrade Napas</h2><button class="x" data-act="upclose" aria-label="Tutup">×</button></div><p class="mute" style="margin:6px 0 12px">Pilih paket, lalu konfirmasi lewat WhatsApp.</p><div class="pick">${PLANS.map((x,i)=>`<button data-act="uplan" data-v="${i}" class="${i===up?"on":""}"><span class="row"><b>${x.n}</b><b>${rp(x.h)}</b></span><span class="mute">${x.per}${x.hemat?" · "+x.hemat:""}</span></button>`).join("")}</div><a class="btn wa" style="margin-top:16px" href="https://wa.me/${WA_NUMBER}?text=${msg}" target="_blank" rel="noopener">Konfirmasi lewat WhatsApp</a><p class="mute" style="font-size:12px;margin:10px 0 0">Akses diperpanjang setelah pembayaran dikonfirmasi admin.</p></div></div>`}
