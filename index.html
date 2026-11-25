@@ -90,7 +90,7 @@ input,select{background:var(--input);box-shadow:inset 0 2px 4px rgba(0,0,0,.1)}
 <div id="app"></div>
 <script>
 const WA_NUMBER="6287738215552";
-const LICENSE_URL="https://script.google.com/macros/s/AKfycbwnvnxXu5cAgAya1MlKfZm5QDJcxBom-jkNKs5ouoirLAGI_Fzid2P9baZTYZ0vtfsz/exec"; /* tempel URL web app Google Apps Script di sini; kosong = tanpa kunci akses */
+const LICENSE_URL="https://script.google.com/macros/s/AKfycbwhuCTixR5mzoM1RsECArwh2t2gu6G3wbaeQpTq740/dev"; /* tempel URL web app Google Apps Script di sini; kosong = tanpa kunci akses */
 const ICON=`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs><linearGradient id="ng" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2FB5A5"/><stop offset="1" stop-color="#08302B"/></linearGradient><linearGradient id="nc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset="1" stop-color="#E59A0C"/></linearGradient><linearGradient id="ns" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><clipPath id="nk"><rect width="512" height="512" rx="112"/></clipPath></defs><g clip-path="url(#nk)"><rect width="512" height="512" fill="url(#ng)"/><ellipse cx="256" cy="40" rx="330" ry="230" fill="url(#ns)"/></g><g fill="none" stroke="#fff" stroke-width="30" stroke-linecap="round"><path d="M112 232H290a44 44 0 1 0-44-44"/><path d="M112 300H370a52 52 0 1 1-52 52"/><path d="M112 368H230"/></g><circle cx="388" cy="150" r="42" fill="url(#nc)" stroke="#fff" stroke-opacity=".6" stroke-width="6"/></svg>`;
 function setupPWA(){try{
  const uri="data:image/svg+xml,"+encodeURIComponent(ICON);
@@ -115,26 +115,32 @@ const TOUR=[
 let tour=null,lic=LICENSE_URL?null:{ok:true,demo:true};
 function tourHtml(){const s=TOUR[tour],last=tour===TOUR.length-1;
  return`<div class="sheet" style="align-items:center;padding:16px"><div data-stop style="border-radius:22px;max-width:420px"><div style="font-size:44px">${s.e}</div><h2 style="margin:8px 0 6px">${s.t}</h2><p class="mute" style="font-size:15px;margin:0 0 16px">${s.d}</p><div class="row"><span class="mute">${tour+1} / ${TOUR.length}</span><div style="display:flex;gap:8px"><button class="btn ghost sm" data-act="tclose">Tutup</button><button class="btn sm" data-act="tnext">${last?"Selesai":"Lanjut"}</button></div></div></div></div>`}
-const LMSG={tidak_terdaftar:"Kode tidak terdaftar. Minta kode akses ke admin.",diblokir:"Akses kamu dinonaktifkan. Hubungi admin.",kedaluwarsa:"Masa aktif sudah habis. Perpanjang lewat WhatsApp.",perangkat:"Kode ini sudah dipakai di 2 perangkat lain.",jaringan:"Tidak bisa terhubung. Cek internet lalu coba lagi."};
+const LMSG={sudah_terdaftar:"Nomor WhatsApp atau perangkat ini sudah pernah memakai trial. Masukkan kode akses kamu, atau hubungi admin.",data_kurang:"Isi nama dan nomor WhatsApp yang benar dulu.",tidak_terdaftar:"Kode tidak terdaftar. Minta kode akses ke admin.",diblokir:"Akses kamu dinonaktifkan. Hubungi admin.",kedaluwarsa:"Masa aktif sudah habis. Perpanjang lewat WhatsApp.",perangkat:"Kode ini sudah dipakai di 2 perangkat lain.",jaringan:"Tidak bisa terhubung. Cek internet lalu coba lagi."};
 function LG(){try{return JSON.parse(localStorage.getItem("napas_lic"))||{}}catch(e){return{}}}
 function LSv(o){try{localStorage.setItem("napas_lic",JSON.stringify(o))}catch(e){}}
+async function daftar(nama,wa){
+ const L=LG();if(!L.dev){L.dev=Math.random().toString(36).slice(2,10)+Date.now().toString(36);LSv(L)}
+ try{const r=await(await fetch(LICENSE_URL+"?aksi=daftar&nama="+encodeURIComponent(nama)+"&wa="+encodeURIComponent(wa)+"&dev="+LG().dev)).json();
+  if(r.ok){LSv({...LG(),kode:r.kode,sampai:r.sampai,paket:r.paket,checked:Date.now()});return{ok:true,kode:r.kode,sampai:r.sampai,paket:r.paket}}
+  return{ok:false,msg:r.alasan}}catch(e){return{ok:false,msg:"jaringan"}}}
 async function verif(kode){
  const L=LG();if(!L.dev){L.dev=Math.random().toString(36).slice(2,10)+Date.now().toString(36);LSv(L)}
  try{const r=await(await fetch(LICENSE_URL+"?aksi=cek&kode="+encodeURIComponent(kode)+"&dev="+L.dev)).json();
-  if(r.ok){LSv({...LG(),kode,sampai:r.sampai,paket:r.paket,checked:Date.now()});return{ok:true,sampai:r.sampai,paket:r.paket}}
+  if(r.ok){LSv({...LG(),kode,sampai:r.sampai,paket:r.paket,checked:Date.now()});return{ok:true,kode,sampai:r.sampai,paket:r.paket}}
   LSv({...LG(),kode:"",sampai:""});return{ok:false,msg:r.alasan}}
- catch(e){const c=LG();if(c.kode===kode&&c.sampai&&c.sampai>=today()&&Date.now()-c.checked<2592e5)return{ok:true,sampai:c.sampai,paket:c.paket,offline:true};return{ok:false,msg:"jaringan"}}}
+ catch(e){const c=LG();if(c.kode===kode&&c.sampai&&c.sampai>=today()&&Date.now()-c.checked<2592e5)return{ok:true,kode,sampai:c.sampai,paket:c.paket,offline:true};return{ok:false,msg:"jaringan"}}}
 async function boot(){if(!LICENSE_URL){if(S.setup&&!S.tourDone)tour=0;render();return}
  const k=LG().kode;lic=k?await verif(k):{ok:false};
  if(lic.ok&&S.setup&&!S.tourDone)tour=0;render()}
 function gateHtml(){if(lic===null)return`<div class="mute" style="text-align:center;margin-top:30vh">Memeriksa akses…</div>`;
  const exp=lic.msg==="kedaluwarsa",m=encodeURIComponent(exp?"Halo, saya mau perpanjang akses Napas.":"Halo, saya mau minta kode akses Napas (gratis 30 hari).");
  return`<div style="text-align:center;margin-top:7vh"><div class="logo" style="width:96px;margin:0 auto">${ICON}</div><h1 style="font-size:30px;margin:14px 0 4px">Napas</h1><p class="mute">Masukkan kode akses untuk memakai aplikasi. Pengguna baru gratis 30 hari.</p></div>
- <div class="card"><label for="kode">Kode akses</label><input id="kode" autocomplete="off" autocapitalize="characters" placeholder="Contoh: NAPAS-1234">${lic.msg?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}
+ <div class="card"><b>Pengguna baru?</b><div class="mute">Coba gratis 30 hari, tanpa perlu kode.</div><label for="tnama">Nama</label><input id="tnama" autocomplete="name" value="${esc(lic.nama||"")}"><label for="twa">Nomor WhatsApp</label><input id="twa" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" value="${esc(lic.wa||"")}">${lic.msg&&lic.src==="trial"?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}<button class="btn" style="margin-top:14px;width:100%" data-act="trial">Coba gratis 30 hari</button></div>
+ <div class="card"><b>Sudah punya kode?</b><label for="kode">Kode akses</label><input id="kode" autocomplete="off" autocapitalize="characters" placeholder="Contoh: NAPAS-1234">${lic.msg&&lic.src!=="trial"?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}
  <button class="btn" style="margin-top:14px;width:100%" data-act="login">Masuk</button></div>
  <a class="btn wa" href="https://wa.me/${WA_NUMBER}?text=${m}" target="_blank" rel="noopener">${exp?"Perpanjang":"Minta kode"} lewat WhatsApp</a>`}
 function licBanner(){if(!lic||lic.demo||!lic.sampai)return"";const n=dd(lic.sampai,today());
- return`<div class="card row"><div><b>${lic.paket==="trial"?"Masa percobaan gratis":"Langganan aktif"}</b><div class="mute">Sisa ${n} hari · sampai ${tgl(lic.sampai)}</div></div>${n<=7?`<span>${waBtn("Perpanjang",1)}</span>`:""}</div>`}
+ return`<div class="card row"><div><b>${lic.paket==="trial"?"Masa percobaan gratis":"Langganan aktif"}</b><div class="mute">Sisa ${n} hari · sampai ${tgl(lic.sampai)}</div><div class="mute">Kode akses: <b>${esc(lic.kode||"")}</b></div></div>${n<=7?`<span>${waBtn("Perpanjang",1)}</span>`:""}</div>`}
 const P={
  desain:{n:"Desain",e:"🎨",item:"Proyek",pola:"Biasanya DP di awal, pelunasan saat file final. Catat DP sebagai “sudah dibayar” dan pelunasannya sebagai “belum dibayar”.",cat:["Langganan software","Aset & font","Internet","Makan","Lainnya"],pots:["Kebutuhan","Dana darurat","Pajak & aset","Bebas"],pct:[50,20,10,20]},
  penulis:{n:"Penulis",e:"✍️",item:"Naskah",pola:"Bayaran sering cair 14–30 hari setelah terbit. Catat sebagai “belum dibayar” lengkap dengan tanggal jatuh tempo.",cat:["Riset & buku","Internet","Langganan tools","Makan","Lainnya"],pots:["Kebutuhan","Dana darurat","Pajak","Bebas"],pct:[50,20,10,20]},
@@ -274,6 +280,9 @@ document.addEventListener("click",e=>{
  else if(a==="lunas"){const x=S.tx.find(t=>t.id===id);if(x){x.status="paid";x.date=today();save();toast("Tercatat lunas: "+rp(x.amt));render()}}
  else if(a==="tagih"){const x=S.tx.find(t=>t.id===id);const m=`Halo, saya mengingatkan tagihan ${x.label} sebesar ${rp(x.amt)}${x.due?" (jatuh tempo "+tgl(x.due)+")":""}. Mohon konfirmasi jadwal pembayarannya ya. Terima kasih.`;
   (navigator.clipboard?navigator.clipboard.writeText(m):Promise.reject()).then(()=>toast("Pesan tagih tersalin."),()=>toast(m))}
+ else if(a==="trial"){const n=($("#tnama").value||"").trim(),w=($("#twa").value||"").trim();
+  if(n.length<2||w.replace(/\D/g,"").length<9){lic={ok:false,msg:"data_kurang",src:"trial",nama:n,wa:w};render();return}
+  lic=null;render();daftar(n,w).then(r=>{if(r.ok){lic={ok:true,kode:r.kode,sampai:r.sampai,paket:r.paket};if(S.setup&&!S.tourDone)tour=0}else lic={ok:false,msg:r.msg,src:"trial",nama:n,wa:w};render();if(r.ok)toast("Kode aksesmu: "+r.kode+". Simpan ya, dipakai kalau masuk dari perangkat lain.")})}
  else if(a==="login"){const k=($("#kode").value||"").trim().toUpperCase();if(!k){toast("Isi kode akses dulu.");return}lic=null;render();verif(k).then(r=>{lic=r;if(r.ok&&S.setup&&!S.tourDone)tour=0;render()})}
  else if(a==="tour"){tour=0;tab="home";render()}
  else if(a==="tnext"){tour++;if(tour>=TOUR.length){tour=null;S.tourDone=true;save();tab="home"}else tab=TOUR[tour].tab;render()}
