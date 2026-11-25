@@ -124,9 +124,19 @@ const TOUR=[
 let tour=null,lic=LICENSE_URL?null:{ok:true,demo:true};
 const TSEL=["#hd",".hero",".fab",'.nav button[data-v="piutang"]','.nav button[data-v="riwayat"]','.nav button[data-v="atur"]','.nav button[data-v="bantuan"]'];
 const PLANS=[{n:"1 bulan",h:9900,per:"Rp9.900 per bulan (sekitar Rp330 per hari)"},{n:"6 bulan",h:49000,per:"Rp8.167 per bulan",hemat:"Hemat 17%"},{n:"1 tahun",h:89000,per:"Rp7.417 per bulan",hemat:"Hemat 25%"}];
-let up=null,trialOpen=false,priv=false;
+let up=null,trialOpen=false,priv=false,pay=null;
+async function cekBayar(oid){const k=lic&&lic.kode;oid=oid||(pay&&pay.order);if(!k||!oid){toast("Belum ada pembayaran yang perlu dicek.");return}
+ try{const r=await(await fetch(LICENSE_URL+"?aksi=cekbayar&order="+encodeURIComponent(oid)+"&kode="+encodeURIComponent(k)+"&dev="+LG().dev)).json();
+  if(r.ok&&r.status==="lunas"){const v=await verif(k);lic=v;pay=null;up=null;render();toast(v.ok?"Pembayaran diterima. Langganan aktif sampai "+tgl(v.sampai)+".":"Pembayaran diterima. Buka ulang aplikasi.")}
+  else if(r.ok&&r.status==="gagal"){pay={err:"Pembayaran gagal atau kedaluwarsa. Pilih paket dan coba lagi."};render()}
+  else toast("Pembayaran belum terdeteksi. Tunggu sebentar lalu cek lagi.")}catch(e){toast(LMSG.jaringan)}}
+function payBlock(msg){const wa=`href="https://wa.me/${WA_NUMBER}?text=${msg}" target="_blank" rel="noopener"`;
+ if(!(LICENSE_URL&&lic&&lic.kode))return`<a class="btn wa" style="margin-top:16px" ${wa}>Konfirmasi lewat WhatsApp</a><p class="mute" style="font-size:12px;margin:10px 0 0">Akses diperpanjang setelah pembayaran dikonfirmasi admin.</p>`;
+ if(pay&&pay.loading)return`<button class="btn" style="margin-top:16px;width:100%" disabled>Menyiapkan pembayaran…</button>`;
+ if(pay&&pay.url)return`<a class="btn" style="margin-top:16px;display:block;text-align:center;text-decoration:none" href="${esc(pay.url)}" target="_blank" rel="noopener">Buka halaman pembayaran</a><button class="btn ghost" style="margin-top:10px;width:100%" data-act="cekbayar">Saya sudah bayar, cek status</button><p class="mute" style="font-size:12px;margin:10px 0 0">Langganan aktif otomatis setelah pembayaran berhasil. Kalau belum berubah, tunggu satu menit lalu cek status lagi.</p>`;
+ return`${pay&&pay.err?`<div class="late" style="margin-top:12px">${esc(pay.err)}</div>`:""}<button class="btn" style="margin-top:16px;width:100%" data-act="bayar">Bayar ${rp(PLANS[up].h)}</button><a class="btn ghost" style="margin-top:10px;display:block;text-align:center;text-decoration:none" ${wa}>Konfirmasi lewat WhatsApp</a><p class="mute" style="font-size:12px;margin:10px 0 0">Bayar dengan QRIS atau e-wallet (GoPay, ShopeePay). Langganan aktif otomatis.</p>`}
 function upHtml(){const pl=PLANS[up],msg=encodeURIComponent(`Halo, saya mau upgrade Napas paket ${pl.n} (${rp(pl.h)}). Kode akses: ${(lic&&lic.kode)||"-"}.`);
- return`<div class="sheet" data-act="upclose"><div data-stop><div class="row"><h2 style="margin:0">Upgrade Napas</h2><button class="x" data-act="upclose" aria-label="Tutup">×</button></div><p class="mute" style="margin:6px 0 12px">Pilih paket, lalu konfirmasi lewat WhatsApp.</p><div class="pick">${PLANS.map((x,i)=>`<button data-act="uplan" data-v="${i}" class="${i===up?"on":""}"><span class="row"><b>${x.n}</b><b>${rp(x.h)}</b></span><span class="mute">${x.per}${x.hemat?" · "+x.hemat:""}</span></button>`).join("")}</div><a class="btn wa" style="margin-top:16px" href="https://wa.me/${WA_NUMBER}?text=${msg}" target="_blank" rel="noopener">Konfirmasi lewat WhatsApp</a><p class="mute" style="font-size:12px;margin:10px 0 0">Akses diperpanjang setelah pembayaran dikonfirmasi admin.</p></div></div>`}
+ return`<div class="sheet" data-act="upclose"><div data-stop><div class="row"><h2 style="margin:0">Upgrade Napas</h2><button class="x" data-act="upclose" aria-label="Tutup">×</button></div><p class="mute" style="margin:6px 0 12px">${LICENSE_URL&&lic&&lic.kode?"Pilih paket, lalu bayar dengan QRIS atau e-wallet.":"Pilih paket, lalu konfirmasi lewat WhatsApp."}</p><div class="pick">${PLANS.map((x,i)=>`<button data-act="uplan" data-v="${i}" class="${i===up?"on":""}"><span class="row"><b>${x.n}</b><b>${rp(x.h)}</b></span><span class="mute">${x.per}${x.hemat?" · "+x.hemat:""}</span></button>`).join("")}</div>${payBlock(msg)}</div></div>`}
 function drawTour(){let o=document.getElementById("tourbox");
  if(tour===null){if(o)o.remove();return}
  if(!o){o=document.createElement("div");o.id="tourbox";document.body.appendChild(o)}
@@ -137,7 +147,7 @@ function drawTour(){let o=document.getElementById("tourbox");
  const pos=!r?"top:50%;transform:translateY(-50%)":(y+h/2<H/2?`top:${Math.min(y+h+12,H-230)}px`:`bottom:${H-y+12}px`);
  o.innerHTML=dim+`<div class="tcard" style="${pos}"><div style="font-size:38px;line-height:1">${s.e}</div><h2 style="margin:8px 0 6px">${s.t}</h2><p class="mute" style="font-size:15px;margin:0 0 14px">${s.d}</p><div class="row"><span class="mute">${tour+1} / ${TOUR.length}</span><div style="display:flex;gap:8px"><button class="btn ghost sm" data-act="tclose">Tutup</button><button class="btn sm" data-act="tnext">${last?"Selesai":"Lanjut"}</button></div></div></div>`}
 window.addEventListener("resize",()=>{if(tour!==null)drawTour()});
-const LMSG={setuju:"Centang persetujuan Kebijakan Privasi dulu.",sudah_terdaftar:"Nomor WhatsApp atau perangkat ini sudah pernah memakai trial. Masukkan kode akses kamu, atau hubungi admin.",data_kurang:"Isi nama dan nomor WhatsApp yang benar dulu.",tidak_terdaftar:"Kode tidak terdaftar. Minta kode akses ke admin.",diblokir:"Akses kamu dinonaktifkan. Hubungi admin.",kedaluwarsa:"Masa aktif sudah habis. Perpanjang lewat WhatsApp.",perangkat:"Kode ini sudah dipakai di 2 perangkat lain.",jaringan:"Tidak bisa terhubung. Cek internet lalu coba lagi."};
+const LMSG={gateway:"Pembayaran sedang tidak tersedia. Coba lagi nanti atau hubungi admin.",setuju:"Centang persetujuan Kebijakan Privasi dulu.",sudah_terdaftar:"Nomor WhatsApp atau perangkat ini sudah pernah memakai trial. Masukkan kode akses kamu, atau hubungi admin.",data_kurang:"Isi nama dan nomor WhatsApp yang benar dulu.",tidak_terdaftar:"Kode tidak terdaftar. Minta kode akses ke admin.",diblokir:"Akses kamu dinonaktifkan. Hubungi admin.",kedaluwarsa:"Masa aktif sudah habis. Perpanjang lewat WhatsApp.",perangkat:"Kode ini sudah dipakai di 2 perangkat lain.",jaringan:"Tidak bisa terhubung. Cek internet lalu coba lagi."};
 function LG(){try{return JSON.parse(localStorage.getItem("napas_lic"))||{}}catch(e){return{}}}
 function LSv(o){try{localStorage.setItem("napas_lic",JSON.stringify(o))}catch(e){}}
 async function daftar(nama,wa){
@@ -149,20 +159,23 @@ async function verif(kode){
  const L=LG();if(!L.dev){L.dev=Math.random().toString(36).slice(2,10)+Date.now().toString(36);LSv(L)}
  try{const r=await(await fetch(LICENSE_URL+"?aksi=cek&kode="+encodeURIComponent(kode)+"&dev="+L.dev)).json();
   if(r.ok){LSv({...LG(),kode,sampai:r.sampai,paket:r.paket,checked:Date.now()});return{ok:true,kode,sampai:r.sampai,paket:r.paket}}
+  LSv({...LG(),sampai:""});if(r.alasan==="kedaluwarsa")return{ok:false,msg:r.alasan,kode};
   LSv({...LG(),kode:"",sampai:""});return{ok:false,msg:r.alasan}}
  catch(e){const c=LG();if(c.kode===kode&&c.sampai&&c.sampai>=today()&&Date.now()-c.checked<2592e5)return{ok:true,kode,sampai:c.sampai,paket:c.paket,offline:true};return{ok:false,msg:"jaringan"}}}
 async function boot(){if(!LICENSE_URL){if(S.setup&&!S.tourDone)tour=0;render();return}
  const k=LG().kode;lic=k?await verif(k):{ok:false};
- if(lic.ok&&S.setup&&!S.tourDone)tour=0;render()}
+ if(lic.ok&&S.setup&&!S.tourDone)tour=0;render();
+ const oid=new URLSearchParams(location.search).get("order_id");if(oid&&lic.kode){try{history.replaceState(null,"",location.pathname+location.hash)}catch(e){}cekBayar(oid)}}
 function gateHtml(){if(lic===null)return`<div class="mute" style="text-align:center;margin-top:30vh">Memeriksa akses…</div>`;
  const exp=lic.msg==="kedaluwarsa",m=encodeURIComponent(exp?"Halo, saya mau perpanjang akses Napas.":"Halo, saya mau minta kode akses Napas (gratis 30 hari).");
  return`<div style="text-align:center;margin-top:7vh"><div class="logo" style="width:96px;margin:0 auto">${ICON}</div><h1 style="font-size:30px;margin:14px 0 4px">Napas</h1><p class="mute">Masukkan kode akses untuk memakai aplikasi. Pengguna baru gratis 30 hari.</p></div>
+ ${exp&&lic.kode?`<div class="card"><b>Masa aktif habis</b><div class="mute" style="margin:4px 0 10px">Perpanjang sekarang dengan QRIS atau e-wallet. Aktif otomatis setelah bayar.</div><button class="btn" style="width:100%" data-act="upgrade">Perpanjang sekarang</button></div>`:""}
  <div class="card"><b>Pengguna baru?</b><div class="mute">Coba gratis 30 hari, tanpa perlu kode.</div>${(trialOpen||lic.src==="trial")?`<label for="tnama">Nama</label><input id="tnama" autocomplete="name" value="${esc(lic.nama||"")}"><label for="twa">Nomor WhatsApp</label><input id="twa" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" value="${esc(lic.wa||"")}">${lic.msg&&lic.src==="trial"?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}<label class="chk"><input type="checkbox" id="tcek"><span>Saya setuju dengan <a href="#" data-act="priv">Kebijakan Privasi</a></span></label><button class="btn" style="margin-top:14px;width:100%" data-act="trial">Mulai trial 30 hari</button>`:`<button class="btn" style="margin-top:12px;width:100%" data-act="trialopen">Coba GRATIS 30 hari</button>`}</div>
  <div class="card"><b>Sudah punya kode?</b><label for="kode">Kode akses</label><input id="kode" autocomplete="off" autocapitalize="characters" placeholder="Contoh: NAPAS-1234">${lic.msg&&lic.src!=="trial"?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}
  <button class="btn" style="margin-top:14px;width:100%" data-act="login">Masuk</button></div>
  <a class="btn wa" href="https://wa.me/${WA_NUMBER}?text=${m}" target="_blank" rel="noopener">${exp?"Perpanjang":"Minta kode"} lewat WhatsApp</a>
  ${S.tx&&S.tx.length?`<div class="card" style="margin-top:12px"><b>Datamu tetap milikmu</b><div class="mute" style="margin:4px 0 10px">Unduh catatanmu kapan pun, walau masa aktif habis.</div><div style="display:flex;gap:8px"><button class="btn ghost sm" data-act="expcsv">Ekspor CSV</button><button class="btn ghost sm" data-act="expjson">Cadangkan JSON</button></div></div>`:""}
- <div style="text-align:center;margin:14px 0"><a href="#" data-act="priv" class="mute">Kebijakan Privasi</a></div>${priv?privHtml():""}`}
+ <div style="text-align:center;margin:14px 0"><a href="#" data-act="priv" class="mute">Kebijakan Privasi</a></div>${priv?privHtml():""}${up!==null?upHtml():""}`}
 function licBanner(){if(!lic||lic.demo||!lic.sampai)return"";const n=dd(lic.sampai,today());
  const t=(lic.paket==="trial"?"Masa percobaan gratis":"Langganan aktif")+" · sisa "+n+" hari (sampai "+tgl(lic.sampai)+") · kode akses "+esc(lic.kode||"")+" · ";
  return`<div class="strip"><div class="mq"><span>${t}${t}</span></div><button class="btn sm" data-act="upgrade">Upgrade</button></div>`}
@@ -335,9 +348,12 @@ document.addEventListener("click",e=>{
  else if(a==="restore"){const f=$("#rf");if(f)f.click()}
  else if(a==="edit"){const x=S.tx.find(t=>t.id===id);if(x){sheet={...x,amt:fmtN(x.amt),cat:x.cat||P[S.bidang].cat[0]};render()}}
  else if(a==="trialopen"){trialOpen=true;render();const t=$("#tnama");if(t)t.focus()}
- else if(a==="upgrade"){up=1;render()}
- else if(a==="uplan"){up=+v;render()}
- else if(a==="upclose"){up=null;render()}
+ else if(a==="bayar"){const k=lic&&lic.kode;if(!k)return;pay={loading:true};render();
+  fetch(LICENSE_URL+"?aksi=bayar&kode="+encodeURIComponent(k)+"&paket="+["1","6","12"][up]+"&dev="+LG().dev).then(r=>r.json()).then(r=>{pay=r.ok?{url:r.url,order:r.order}:{err:LMSG[r.alasan]||LMSG.gateway};render()}).catch(()=>{pay={err:LMSG.jaringan};render()})}
+ else if(a==="cekbayar"){cekBayar()}
+ else if(a==="upgrade"){up=1;pay=null;render()}
+ else if(a==="uplan"){up=+v;pay=null;render()}
+ else if(a==="upclose"){up=null;pay=null;render()}
  else if(a==="trial"){const n=($("#tnama").value||"").trim(),w=($("#twa").value||"").trim();
   if(n.length<2||w.replace(/\D/g,"").length<9){lic={ok:false,msg:"data_kurang",src:"trial",nama:n,wa:w};render();return}
   if(!($("#tcek")&&$("#tcek").checked)){lic={ok:false,msg:"setuju",src:"trial",nama:n,wa:w};render();return}
