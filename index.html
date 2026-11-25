@@ -82,6 +82,7 @@ body{background:radial-gradient(700px 420px at 0% -5%,rgba(242,177,52,.28),trans
 input,select{background:var(--input);box-shadow:inset 0 2px 4px rgba(0,0,0,.1)}
 .tip{background:var(--glass)}
 .pot .bar{box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}.pot .bar i{background:linear-gradient(90deg,#2FB5A5,#16685E)}
+.logo svg{width:100%;height:auto;display:block}
 .toast{background:rgba(16,32,30,.9);color:#fff;border:1px solid rgba(255,255,255,.18);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 10px 24px rgba(0,0,0,.35)}
 </style>
 </head>
@@ -89,6 +90,51 @@ input,select{background:var(--input);box-shadow:inset 0 2px 4px rgba(0,0,0,.1)}
 <div id="app"></div>
 <script>
 const WA_NUMBER="6287738215552";
+const LICENSE_URL="https://script.google.com/macros/s/AKfycbwnvnxXu5cAgAya1MlKfZm5QDJcxBom-jkNKs5ouoirLAGI_Fzid2P9baZTYZ0vtfsz/exec"; /* tempel URL web app Google Apps Script di sini; kosong = tanpa kunci akses */
+const ICON=`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs><linearGradient id="ng" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2FB5A5"/><stop offset="1" stop-color="#08302B"/></linearGradient><linearGradient id="nc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset="1" stop-color="#E59A0C"/></linearGradient><linearGradient id="ns" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><clipPath id="nk"><rect width="512" height="512" rx="112"/></clipPath></defs><g clip-path="url(#nk)"><rect width="512" height="512" fill="url(#ng)"/><ellipse cx="256" cy="40" rx="330" ry="230" fill="url(#ns)"/></g><g fill="none" stroke="#fff" stroke-width="30" stroke-linecap="round"><path d="M112 232H290a44 44 0 1 0-44-44"/><path d="M112 300H370a52 52 0 1 1-52 52"/><path d="M112 368H230"/></g><circle cx="388" cy="150" r="42" fill="url(#nc)" stroke="#fff" stroke-opacity=".6" stroke-width="6"/></svg>`;
+function setupPWA(){try{
+ const uri="data:image/svg+xml,"+encodeURIComponent(ICON);
+ const add=(rel,href,type)=>{const l=document.createElement("link");l.rel=rel;l.href=href;if(type)l.type=type;document.head.appendChild(l)};
+ add("icon",uri,"image/svg+xml");
+ const m=document.createElement("meta");m.name="theme-color";m.content="#0F4C45";document.head.appendChild(m);
+ const img=new Image();img.onload=()=>{try{
+  const png=n=>{const c=document.createElement("canvas");c.width=c.height=n;c.getContext("2d").drawImage(img,0,0,n,n);return c.toDataURL("image/png")};
+  add("apple-touch-icon",png(180));
+  const base=location.href.split("#")[0];
+  const man={name:"Napas: keuangan pekerja lepas",short_name:"Napas",start_url:base,scope:base,display:"standalone",background_color:"#0F4C45",theme_color:"#0F4C45",lang:"id",icons:[{src:png(192),sizes:"192x192",type:"image/png",purpose:"any"},{src:png(512),sizes:"512x512",type:"image/png",purpose:"any"},{src:uri,sizes:"any",type:"image/svg+xml"}]};
+  add("manifest",URL.createObjectURL(new Blob([JSON.stringify(man)],{type:"application/manifest+json"})))}catch(e){}};
+ img.src=uri}catch(e){}}
+const TOUR=[
+ {e:"👋",t:"Selamat datang di Napas",d:"Aplikasi pencatat uang untuk pekerja lepas. Tutorial singkat ini menjelaskan menu-menunya.",tab:"home"},
+ {e:"🫁",t:"Beranda",d:"Angka besar menunjukkan uangmu cukup untuk berapa hari. Di bawahnya ada ringkasan bulan ini, piutang, dan pembagian bayaran.",tab:"home"},
+ {e:"➕",t:"Tombol +",d:"Tap untuk mencatat pemasukan atau pengeluaran. Pemasukan bisa ditandai sudah atau belum dibayar klien.",tab:"home"},
+ {e:"🧾",t:"Piutang",d:"Daftar bayaran yang belum diterima, lengkap dengan penanda telat dan tombol salin pesan tagih untuk klien.",tab:"piutang"},
+ {e:"📒",t:"Riwayat",d:"Semua catatan tersimpan di sini. Salah catat? Hapus lalu catat ulang.",tab:"riwayat"},
+ {e:"⚙️",t:"Atur",d:"Ganti bidang kerja, pengeluaran wajib bulanan, dan saldo awal. Angka hari ikut menyesuaikan.",tab:"atur"},
+ {e:"💬",t:"Bantuan",d:"Cara penggunaan lengkap, pertanyaan umum, dan tombol konsultasi lewat WhatsApp.",tab:"bantuan"}];
+let tour=null,lic=LICENSE_URL?null:{ok:true,demo:true};
+function tourHtml(){const s=TOUR[tour],last=tour===TOUR.length-1;
+ return`<div class="sheet" style="align-items:center;padding:16px"><div data-stop style="border-radius:22px;max-width:420px"><div style="font-size:44px">${s.e}</div><h2 style="margin:8px 0 6px">${s.t}</h2><p class="mute" style="font-size:15px;margin:0 0 16px">${s.d}</p><div class="row"><span class="mute">${tour+1} / ${TOUR.length}</span><div style="display:flex;gap:8px"><button class="btn ghost sm" data-act="tclose">Tutup</button><button class="btn sm" data-act="tnext">${last?"Selesai":"Lanjut"}</button></div></div></div></div>`}
+const LMSG={tidak_terdaftar:"Kode tidak terdaftar. Minta kode akses ke admin.",diblokir:"Akses kamu dinonaktifkan. Hubungi admin.",kedaluwarsa:"Masa aktif sudah habis. Perpanjang lewat WhatsApp.",perangkat:"Kode ini sudah dipakai di 2 perangkat lain.",jaringan:"Tidak bisa terhubung. Cek internet lalu coba lagi."};
+function LG(){try{return JSON.parse(localStorage.getItem("napas_lic"))||{}}catch(e){return{}}}
+function LSv(o){try{localStorage.setItem("napas_lic",JSON.stringify(o))}catch(e){}}
+async function verif(kode){
+ const L=LG();if(!L.dev){L.dev=Math.random().toString(36).slice(2,10)+Date.now().toString(36);LSv(L)}
+ try{const r=await(await fetch(LICENSE_URL+"?aksi=cek&kode="+encodeURIComponent(kode)+"&dev="+L.dev)).json();
+  if(r.ok){LSv({...LG(),kode,sampai:r.sampai,paket:r.paket,checked:Date.now()});return{ok:true,sampai:r.sampai,paket:r.paket}}
+  LSv({...LG(),kode:"",sampai:""});return{ok:false,msg:r.alasan}}
+ catch(e){const c=LG();if(c.kode===kode&&c.sampai&&c.sampai>=today()&&Date.now()-c.checked<2592e5)return{ok:true,sampai:c.sampai,paket:c.paket,offline:true};return{ok:false,msg:"jaringan"}}}
+async function boot(){if(!LICENSE_URL){if(S.setup&&!S.tourDone)tour=0;render();return}
+ const k=LG().kode;lic=k?await verif(k):{ok:false};
+ if(lic.ok&&S.setup&&!S.tourDone)tour=0;render()}
+function gateHtml(){if(lic===null)return`<div class="mute" style="text-align:center;margin-top:30vh">Memeriksa akses…</div>`;
+ const exp=lic.msg==="kedaluwarsa",m=encodeURIComponent(exp?"Halo, saya mau perpanjang akses Napas.":"Halo, saya mau minta kode akses Napas (gratis 30 hari).");
+ return`<div style="text-align:center;margin-top:7vh"><div class="logo" style="width:96px;margin:0 auto">${ICON}</div><h1 style="font-size:30px;margin:14px 0 4px">Napas</h1><p class="mute">Masukkan kode akses untuk memakai aplikasi. Pengguna baru gratis 30 hari.</p></div>
+ <div class="card"><label for="kode">Kode akses</label><input id="kode" autocomplete="off" autocapitalize="characters" placeholder="Contoh: NAPAS-1234">${lic.msg?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}
+ <button class="btn" style="margin-top:14px;width:100%" data-act="login">Masuk</button></div>
+ <a class="btn wa" href="https://wa.me/${WA_NUMBER}?text=${m}" target="_blank" rel="noopener">${exp?"Perpanjang":"Minta kode"} lewat WhatsApp</a>`}
+function licBanner(){if(!lic||lic.demo||!lic.sampai)return"";const n=dd(lic.sampai,today());
+ return`<div class="card row"><div><b>${lic.paket==="trial"?"Masa percobaan gratis":"Langganan aktif"}</b><div class="mute">Sisa ${n} hari · sampai ${tgl(lic.sampai)}</div></div>${n<=7?`<span>${waBtn("Perpanjang",1)}</span>`:""}</div>`}
 const P={
  desain:{n:"Desain",e:"🎨",item:"Proyek",pola:"Biasanya DP di awal, pelunasan saat file final. Catat DP sebagai “sudah dibayar” dan pelunasannya sebagai “belum dibayar”.",cat:["Langganan software","Aset & font","Internet","Makan","Lainnya"],pots:["Kebutuhan","Dana darurat","Pajak & aset","Bebas"],pct:[50,20,10,20]},
  penulis:{n:"Penulis",e:"✍️",item:"Naskah",pola:"Bayaran sering cair 14–30 hari setelah terbit. Catat sebagai “belum dibayar” lengkap dengan tanggal jatuh tempo.",cat:["Riset & buku","Internet","Langganan tools","Makan","Lainnya"],pots:["Kebutuhan","Dana darurat","Pajak","Bebas"],pct:[50,20,10,20]},
@@ -118,6 +164,7 @@ function calc(){
 }
 function render(){
  const a=$("#app");
+ if(!lic||!lic.ok){a.innerHTML=gateHtml();return}
  if(!S.setup){a.innerHTML=onboard();hints();return}
  const c=calc(),p=P[S.bidang];
  let h="";
@@ -125,7 +172,7 @@ function render(){
   const d=c.days,w=d===null?0:Math.min(100,d/90*100);
   const msg=d===null?"Isi pengeluaran wajib bulanan di Atur agar hitungan jalan.":d<14?"Genting: kurang dari dua minggu. Tagih piutang dulu.":d<30?"Hati-hati: belum sampai sebulan.":d<90?"Cukup aman. Target ideal: 90 hari.":"Napas panjang. Dana darurat sudah kuat.";
   h=`<div class="row" style="margin:4px 2px 14px"><h1 style="font-size:22px">Napas</h1><span class="mute">${p.e} ${p.n}</span></div>
-  <div class="hero"><small>Uang cukup untuk</small>
+  ${licBanner()}<div class="hero"><small>Uang cukup untuk</small>
    <div class="num big">${d===null?"–":d}<span>hari</span></div>
    <div class="gauge"><i style="width:${w}%"></i></div>
    <div>${msg}</div>
@@ -158,7 +205,7 @@ function render(){
   <button class="btn" style="margin-top:16px;width:100%" data-act="saveset">Simpan</button></div>
   <button class="btn ghost" style="width:100%" data-act="reset">Hapus semua data</button>`;
  }
- if(tab==="bantuan"){h=`<h2>Cara penggunaan</h2><div class="card"><ol class="steps">
+ if(tab==="bantuan"){h=`<button class="btn ghost sm" style="margin-top:8px" data-act="tour">Lihat tutorial singkat</button><h2>Cara penggunaan</h2><div class="card"><ol class="steps">
 <li><b>Atur dulu.</b> Isi pengeluaran wajib per bulan dan uang yang ada sekarang di tab Atur. Dari sini hitungan “cukup untuk berapa hari” dibuat.</li>
 <li><b>Catat uang masuk.</b> Tap +, pilih Pemasukan, isi nominal dan nama klien. Pilih “Sudah dibayar” kalau uangnya sudah diterima, atau “Belum dibayar” beserta jatuh tempo.</li>
 <li><b>Catat uang keluar.</b> Tap +, pilih Pengeluaran, isi nominal dan kategori. Catat segera setelah belanja, jangan menumpuk.</li>
@@ -174,7 +221,7 @@ function render(){
 <h2>Konsultasi</h2><div class="card"><div class="mute" style="margin-bottom:10px">Ada yang tidak jelas soal aplikasi, atau ingin memberi masukan? Tanya langsung lewat WhatsApp.</div>${waBtn("Konsultasi lewat WhatsApp")}</div>`}
  const piu=c.wait.length?` (${c.wait.length})`:"";
  a.innerHTML=h+`<button class="fab" aria-label="Catat transaksi" data-act="open">+</button>
- <nav class="nav"><div>${[["home","Beranda"],["piutang","Piutang"+piu],["riwayat","Riwayat"],["atur","Atur"],["bantuan","Bantuan"]].map(([k,n])=>`<button data-act="tab" data-v="${k}" class="${tab===k?"on":""}">${n}</button>`).join("")}</div></nav>`+(sheet?sheetHtml():"");hints();
+ <nav class="nav"><div>${[["home","Beranda"],["piutang","Piutang"+piu],["riwayat","Riwayat"],["atur","Atur"],["bantuan","Bantuan"]].map(([k,n])=>`<button data-act="tab" data-v="${k}" class="${tab===k?"on":""}">${n}</button>`).join("")}</div></nav>`+(sheet?sheetHtml():"")+(tour!==null?tourHtml():"");hints();
 }
 function waBtn(t,sm){const m=encodeURIComponent("Halo, saya mau konsultasi soal aplikasi Napas. Bidang kerja saya: "+P[S.bidang].n+".");const c="btn wa"+(sm?" sm":"");
  return WA_NUMBER?`<a class="${c}" href="https://wa.me/${WA_NUMBER}?text=${m}" target="_blank" rel="noopener">${t}</a>`:`<button class="${c}" data-act="nowa">${t}</button>`}
@@ -212,7 +259,7 @@ document.addEventListener("click",e=>{
  if(el.classList.contains("sheet")&&e.target!==el)return;
  const a=el.dataset.act,v=el.dataset.v,id=+el.dataset.id;
  if(a==="pickb"){draft.b=v;draft.w=$("#ow").value;draft.a=$("#oa").value;S.bidang=v;render();$("#ow").value=draft.w;$("#oa").value=draft.a;hints()}
- else if(a==="start"){S.wajib=num($("#ow").value);S.awal=num($("#oa").value);S.setup=true;save();render()}
+ else if(a==="start"){S.wajib=num($("#ow").value);S.awal=num($("#oa").value);S.setup=true;save();if(!S.tourDone){tour=0;tab="home"}render()}
  else if(a==="tab"){tab=v;render();window.scrollTo(0,0)}
  else if(a==="open"){sheet={type:"in",status:"paid",cat:P[S.bidang].cat[0]};render()}
  else if(a==="close"){sheet=null;render()}
@@ -227,6 +274,10 @@ document.addEventListener("click",e=>{
  else if(a==="lunas"){const x=S.tx.find(t=>t.id===id);if(x){x.status="paid";x.date=today();save();toast("Tercatat lunas: "+rp(x.amt));render()}}
  else if(a==="tagih"){const x=S.tx.find(t=>t.id===id);const m=`Halo, saya mengingatkan tagihan ${x.label} sebesar ${rp(x.amt)}${x.due?" (jatuh tempo "+tgl(x.due)+")":""}. Mohon konfirmasi jadwal pembayarannya ya. Terima kasih.`;
   (navigator.clipboard?navigator.clipboard.writeText(m):Promise.reject()).then(()=>toast("Pesan tagih tersalin."),()=>toast(m))}
+ else if(a==="login"){const k=($("#kode").value||"").trim().toUpperCase();if(!k){toast("Isi kode akses dulu.");return}lic=null;render();verif(k).then(r=>{lic=r;if(r.ok&&S.setup&&!S.tourDone)tour=0;render()})}
+ else if(a==="tour"){tour=0;tab="home";render()}
+ else if(a==="tnext"){tour++;if(tour>=TOUR.length){tour=null;S.tourDone=true;save();tab="home"}else tab=TOUR[tour].tab;render()}
+ else if(a==="tclose"){tour=null;S.tourDone=true;save();tab="home";render()}
  else if(a==="nowa"){toast("Nomor konsultasi belum tersedia.")}
  else if(a==="del"){S.tx=S.tx.filter(t=>t.id!==id);save();render()}
  else if(a==="saveset"){S.bidang=$("#sb").value;S.wajib=num($("#sw").value);S.awal=num($("#sa").value);save();toast("Tersimpan.");render()}
@@ -239,7 +290,7 @@ document.addEventListener("input",e=>{const t=e.target;if(t.tagName!=="INPUT"||t
  try{t.setSelectionRange(c,c)}catch(_){}
  hint(t)});
 document.addEventListener("change",e=>{if(e.target.id==="sb"){S.bidang=e.target.value;save();render();$("#sb").value=S.bidang}});
-render();
+render();setupPWA();boot();
 </script>
 </body>
 </html>
