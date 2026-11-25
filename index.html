@@ -83,6 +83,7 @@ input,select{background:var(--input);box-shadow:inset 0 2px 4px rgba(0,0,0,.1)}
 .tip{background:var(--glass)}
 .pot .bar{box-shadow:inset 0 1px 2px rgba(0,0,0,.2)}.pot .bar i{background:linear-gradient(90deg,#2FB5A5,#16685E)}
 .logo svg{width:100%;height:auto;display:block}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:13px;margin:14px 0 0}.chk input{width:20px;height:20px;flex:none;margin:1px 0 0;padding:0;box-shadow:none}
 .strip{display:flex;align-items:center;gap:10px;margin:0 0 12px;padding:5px 5px 5px 14px;border-radius:999px;background:var(--glass-card);border:1px solid var(--glass-line);box-shadow:var(--shadow)}
 .mq{flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:13px;color:var(--mute)}
 .strip .btn{border-radius:999px;padding:6px 16px}
@@ -117,13 +118,13 @@ const TOUR=[
  {e:"🫁",t:"Beranda",d:"Angka besar menunjukkan uangmu cukup untuk berapa hari. Di bawahnya ada ringkasan bulan ini, piutang, dan pembagian bayaran.",tab:"home"},
  {e:"➕",t:"Tombol +",d:"Tap untuk mencatat pemasukan atau pengeluaran. Pemasukan bisa ditandai sudah atau belum dibayar klien.",tab:"home"},
  {e:"🧾",t:"Piutang",d:"Daftar bayaran yang belum diterima, lengkap dengan penanda telat dan tombol salin pesan tagih untuk klien.",tab:"piutang"},
- {e:"📒",t:"Riwayat",d:"Semua catatan tersimpan di sini. Salah catat? Hapus lalu catat ulang.",tab:"riwayat"},
+ {e:"📒",t:"Riwayat",d:"Semua catatan tersimpan di sini. Salah catat? Tap ✎ untuk mengubah, atau × untuk menghapus.",tab:"riwayat"},
  {e:"⚙️",t:"Atur",d:"Ganti bidang kerja, pengeluaran wajib bulanan, dan saldo awal. Angka hari ikut menyesuaikan.",tab:"atur"},
  {e:"💬",t:"Bantuan",d:"Cara penggunaan lengkap, pertanyaan umum, dan tombol konsultasi lewat WhatsApp.",tab:"bantuan"}];
 let tour=null,lic=LICENSE_URL?null:{ok:true,demo:true};
 const TSEL=["#hd",".hero",".fab",'.nav button[data-v="piutang"]','.nav button[data-v="riwayat"]','.nav button[data-v="atur"]','.nav button[data-v="bantuan"]'];
 const PLANS=[{n:"1 bulan",h:5000,per:"Rp5.000 per bulan"},{n:"6 bulan",h:20000,per:"Rp3.333 per bulan",hemat:"Hemat 33%"},{n:"1 tahun",h:30000,per:"Rp2.500 per bulan",hemat:"Hemat 50%"}];
-let up=null,trialOpen=false;
+let up=null,trialOpen=false,priv=false;
 function upHtml(){const pl=PLANS[up],msg=encodeURIComponent(`Halo, saya mau upgrade Napas paket ${pl.n} (${rp(pl.h)}). Kode akses: ${(lic&&lic.kode)||"-"}.`);
  return`<div class="sheet" data-act="upclose"><div data-stop><div class="row"><h2 style="margin:0">Upgrade Napas</h2><button class="x" data-act="upclose" aria-label="Tutup">×</button></div><p class="mute" style="margin:6px 0 12px">Pilih paket, lalu konfirmasi lewat WhatsApp.</p><div class="pick">${PLANS.map((x,i)=>`<button data-act="uplan" data-v="${i}" class="${i===up?"on":""}"><span class="row"><b>${x.n}</b><b>${rp(x.h)}</b></span><span class="mute">${x.per}${x.hemat?" · "+x.hemat:""}</span></button>`).join("")}</div><a class="btn wa" style="margin-top:16px" href="https://wa.me/${WA_NUMBER}?text=${msg}" target="_blank" rel="noopener">Konfirmasi lewat WhatsApp</a><p class="mute" style="font-size:12px;margin:10px 0 0">Akses diperpanjang setelah pembayaran dikonfirmasi admin.</p></div></div>`}
 function drawTour(){let o=document.getElementById("tourbox");
@@ -136,9 +137,7 @@ function drawTour(){let o=document.getElementById("tourbox");
  const pos=!r?"top:50%;transform:translateY(-50%)":(y+h/2<H/2?`top:${Math.min(y+h+12,H-230)}px`:`bottom:${H-y+12}px`);
  o.innerHTML=dim+`<div class="tcard" style="${pos}"><div style="font-size:38px;line-height:1">${s.e}</div><h2 style="margin:8px 0 6px">${s.t}</h2><p class="mute" style="font-size:15px;margin:0 0 14px">${s.d}</p><div class="row"><span class="mute">${tour+1} / ${TOUR.length}</span><div style="display:flex;gap:8px"><button class="btn ghost sm" data-act="tclose">Tutup</button><button class="btn sm" data-act="tnext">${last?"Selesai":"Lanjut"}</button></div></div></div>`}
 window.addEventListener("resize",()=>{if(tour!==null)drawTour()});
-function tourHtml(){const s=TOUR[tour],last=tour===TOUR.length-1;
- return`<div class="sheet" style="align-items:center;padding:16px"><div data-stop style="border-radius:22px;max-width:420px"><div style="font-size:44px">${s.e}</div><h2 style="margin:8px 0 6px">${s.t}</h2><p class="mute" style="font-size:15px;margin:0 0 16px">${s.d}</p><div class="row"><span class="mute">${tour+1} / ${TOUR.length}</span><div style="display:flex;gap:8px"><button class="btn ghost sm" data-act="tclose">Tutup</button><button class="btn sm" data-act="tnext">${last?"Selesai":"Lanjut"}</button></div></div></div></div>`}
-const LMSG={sudah_terdaftar:"Nomor WhatsApp atau perangkat ini sudah pernah memakai trial. Masukkan kode akses kamu, atau hubungi admin.",data_kurang:"Isi nama dan nomor WhatsApp yang benar dulu.",tidak_terdaftar:"Kode tidak terdaftar. Minta kode akses ke admin.",diblokir:"Akses kamu dinonaktifkan. Hubungi admin.",kedaluwarsa:"Masa aktif sudah habis. Perpanjang lewat WhatsApp.",perangkat:"Kode ini sudah dipakai di 2 perangkat lain.",jaringan:"Tidak bisa terhubung. Cek internet lalu coba lagi."};
+const LMSG={setuju:"Centang persetujuan Kebijakan Privasi dulu.",sudah_terdaftar:"Nomor WhatsApp atau perangkat ini sudah pernah memakai trial. Masukkan kode akses kamu, atau hubungi admin.",data_kurang:"Isi nama dan nomor WhatsApp yang benar dulu.",tidak_terdaftar:"Kode tidak terdaftar. Minta kode akses ke admin.",diblokir:"Akses kamu dinonaktifkan. Hubungi admin.",kedaluwarsa:"Masa aktif sudah habis. Perpanjang lewat WhatsApp.",perangkat:"Kode ini sudah dipakai di 2 perangkat lain.",jaringan:"Tidak bisa terhubung. Cek internet lalu coba lagi."};
 function LG(){try{return JSON.parse(localStorage.getItem("napas_lic"))||{}}catch(e){return{}}}
 function LSv(o){try{localStorage.setItem("napas_lic",JSON.stringify(o))}catch(e){}}
 async function daftar(nama,wa){
@@ -158,15 +157,15 @@ async function boot(){if(!LICENSE_URL){if(S.setup&&!S.tourDone)tour=0;render();r
 function gateHtml(){if(lic===null)return`<div class="mute" style="text-align:center;margin-top:30vh">Memeriksa akses…</div>`;
  const exp=lic.msg==="kedaluwarsa",m=encodeURIComponent(exp?"Halo, saya mau perpanjang akses Napas.":"Halo, saya mau minta kode akses Napas (gratis 30 hari).");
  return`<div style="text-align:center;margin-top:7vh"><div class="logo" style="width:96px;margin:0 auto">${ICON}</div><h1 style="font-size:30px;margin:14px 0 4px">Napas</h1><p class="mute">Masukkan kode akses untuk memakai aplikasi. Pengguna baru gratis 30 hari.</p></div>
- <div class="card"><b>Pengguna baru?</b><div class="mute">Coba gratis 30 hari, tanpa perlu kode.</div>${(trialOpen||lic.src==="trial")?`<label for="tnama">Nama</label><input id="tnama" autocomplete="name" value="${esc(lic.nama||"")}"><label for="twa">Nomor WhatsApp</label><input id="twa" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" value="${esc(lic.wa||"")}">${lic.msg&&lic.src==="trial"?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}<button class="btn" style="margin-top:14px;width:100%" data-act="trial">Mulai trial 30 hari</button>`:`<button class="btn" style="margin-top:12px;width:100%" data-act="trialopen">Coba GRATIS 30 hari</button>`}</div>
+ <div class="card"><b>Pengguna baru?</b><div class="mute">Coba gratis 30 hari, tanpa perlu kode.</div>${(trialOpen||lic.src==="trial")?`<label for="tnama">Nama</label><input id="tnama" autocomplete="name" value="${esc(lic.nama||"")}"><label for="twa">Nomor WhatsApp</label><input id="twa" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" value="${esc(lic.wa||"")}">${lic.msg&&lic.src==="trial"?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}<label class="chk"><input type="checkbox" id="tcek"><span>Saya setuju dengan <a href="#" data-act="priv">Kebijakan Privasi</a></span></label><button class="btn" style="margin-top:14px;width:100%" data-act="trial">Mulai trial 30 hari</button>`:`<button class="btn" style="margin-top:12px;width:100%" data-act="trialopen">Coba GRATIS 30 hari</button>`}</div>
  <div class="card"><b>Sudah punya kode?</b><label for="kode">Kode akses</label><input id="kode" autocomplete="off" autocapitalize="characters" placeholder="Contoh: NAPAS-1234">${lic.msg&&lic.src!=="trial"?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}
  <button class="btn" style="margin-top:14px;width:100%" data-act="login">Masuk</button></div>
- <a class="btn wa" href="https://wa.me/${WA_NUMBER}?text=${m}" target="_blank" rel="noopener">${exp?"Perpanjang":"Minta kode"} lewat WhatsApp</a>`}
+ <a class="btn wa" href="https://wa.me/${WA_NUMBER}?text=${m}" target="_blank" rel="noopener">${exp?"Perpanjang":"Minta kode"} lewat WhatsApp</a>
+ ${S.tx&&S.tx.length?`<div class="card" style="margin-top:12px"><b>Datamu tetap milikmu</b><div class="mute" style="margin:4px 0 10px">Unduh catatanmu kapan pun, walau masa aktif habis.</div><div style="display:flex;gap:8px"><button class="btn ghost sm" data-act="expcsv">Ekspor CSV</button><button class="btn ghost sm" data-act="expjson">Cadangkan JSON</button></div></div>`:""}
+ <div style="text-align:center;margin:14px 0"><a href="#" data-act="priv" class="mute">Kebijakan Privasi</a></div>${priv?privHtml():""}`}
 function licBanner(){if(!lic||lic.demo||!lic.sampai)return"";const n=dd(lic.sampai,today());
  const t=(lic.paket==="trial"?"Masa percobaan gratis":"Langganan aktif")+" · sisa "+n+" hari (sampai "+tgl(lic.sampai)+") · kode akses "+esc(lic.kode||"")+" · ";
  return`<div class="strip"><div class="mq"><span>${t}${t}</span></div><button class="btn sm" data-act="upgrade">Upgrade</button></div>`}
-function licBannerLama(){if(!lic||lic.demo||!lic.sampai)return"";const n=dd(lic.sampai,today());
- return`<div class="card row"><div><b>${lic.paket==="trial"?"Masa percobaan gratis":"Langganan aktif"}</b><div class="mute">Sisa ${n} hari · sampai ${tgl(lic.sampai)}</div><div class="mute">Kode akses: <b>${esc(lic.kode||"")}</b></div></div>${n<=7?`<span>${waBtn("Perpanjang",1)}</span>`:""}</div>`}
 const P={
  desain:{n:"Desain",e:"🎨",item:"Proyek",pola:"Biasanya DP di awal, pelunasan saat file final. Catat DP sebagai “sudah dibayar” dan pelunasannya sebagai “belum dibayar”.",cat:["Langganan software","Aset & font","Internet","Makan","Lainnya"],pots:["Kebutuhan","Dana darurat","Pajak & aset","Bebas"],pct:[50,20,10,20]},
  penulis:{n:"Penulis",e:"✍️",item:"Naskah",pola:"Bayaran sering cair 14–30 hari setelah terbit. Catat sebagai “belum dibayar” lengkap dengan tanggal jatuh tempo.",cat:["Riset & buku","Internet","Langganan tools","Makan","Lainnya"],pots:["Kebutuhan","Dana darurat","Pajak","Bebas"],pct:[50,20,10,20]},
@@ -222,12 +221,12 @@ function render(){
   const l=[...c.wait].sort((x,y)=>(x.due||"9").localeCompare(y.due||"9"));
   h=`<h2>Piutang</h2><div class="card">${l.length?l.map(x=>`<div class="item"><div class="row"><b>${esc(x.label)}</b><b>${rp(x.amt)}</b></div>
    <div class="mute">${x.due?(x.due<today()?`<span class="late">Telat ${dd(today(),x.due)} hari</span>`:"Jatuh tempo "+tgl(x.due)):"Tanpa jatuh tempo"}</div>
-   <div style="display:flex;gap:8px;margin-top:8px"><button class="btn sm" data-act="lunas" data-id="${x.id}">Sudah dibayar</button><button class="btn ghost sm" data-act="tagih" data-id="${x.id}">Salin pesan tagih</button></div></div>`).join(""):`<div class="mute">Semua ${p.item.toLowerCase()} sudah dibayar. Tap + untuk mencatat yang baru.</div>`}</div>`;
+   <div style="display:flex;gap:8px;margin-top:8px"><button class="btn sm" data-act="lunas" data-id="${x.id}">Sudah dibayar</button><button class="btn ghost sm" data-act="tagih" data-id="${x.id}">Salin pesan tagih</button><button class="btn ghost sm" data-act="edit" data-id="${x.id}">Ubah</button></div></div>`).join(""):`<div class="mute">Semua ${p.item.toLowerCase()} sudah dibayar. Tap + untuk mencatat yang baru.</div>`}</div>`;
  }
  if(tab==="riwayat"){
   const l=[...S.tx].sort((x,y)=>y.date.localeCompare(x.date)||y.id-x.id);
   h=`<h2>Riwayat</h2><div class="card">${l.length?l.map(x=>`<div class="item row"><div><b>${esc(x.label)}</b><div class="mute">${tgl(x.date)}${x.type==="out"?" · "+esc(x.cat):x.status==="wait"?" · belum dibayar":""}</div></div>
-   <div style="text-align:right"><span class="${x.type}">${x.type==="in"?"+":"-"}${rp(x.amt)}</span> <button class="x" aria-label="Hapus" data-act="del" data-id="${x.id}">×</button></div></div>`).join(""):`<div class="mute">Belum ada catatan. Tap + untuk mulai.</div>`}</div>`;
+   <div style="text-align:right"><span class="${x.type}">${x.type==="in"?"+":"-"}${rp(x.amt)}</span> <button class="x" aria-label="Ubah" data-act="edit" data-id="${x.id}">✎</button> <button class="x" aria-label="Hapus" data-act="del" data-id="${x.id}">×</button></div></div>`).join(""):`<div class="mute">Belum ada catatan. Tap + untuk mulai.</div>`}</div>`;
  }
  if(tab==="atur"){
   h=`<h2>Atur</h2><div class="card"><label for="sb">Bidang kerja</label><select id="sb">${Object.keys(P).map(k=>`<option value="${k}" ${k===S.bidang?"selected":""}>${P[k].e} ${P[k].n}</option>`).join("")}</select>
@@ -235,6 +234,7 @@ function render(){
   <label for="sw">Pengeluaran wajib per bulan (Rp)</label><input id="sw" inputmode="numeric" value="${S.wajib?fmtN(S.wajib):""}">
   <label for="sa">Saldo awal (Rp)</label><input id="sa" inputmode="numeric" value="${S.awal?fmtN(S.awal):""}">
   <button class="btn" style="margin-top:16px;width:100%" data-act="saveset">Simpan</button></div>
+  <h2>Data saya</h2><div class="card"><div class="mute" style="margin-bottom:10px">Catatan tersimpan di perangkat ini. Cadangkan secara berkala agar aman kalau HP hilang atau diganti.</div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost sm" data-act="expcsv">Ekspor CSV</button><button class="btn ghost sm" data-act="expjson">Cadangkan JSON</button><button class="btn ghost sm" data-act="restore">Pulihkan</button></div><input type="file" id="rf" accept=".json,application/json" hidden><div style="margin-top:12px"><a href="#" data-act="priv" class="mute">Kebijakan Privasi</a></div></div>
   <button class="btn" style="width:100%;margin-bottom:10px" data-act="upgrade">Upgrade paket</button><button class="btn ghost" style="width:100%" data-act="reset">Hapus semua data</button>`;
  }
  if(tab==="bantuan"){h=`<button class="btn ghost sm" style="margin-top:8px" data-act="tour">Lihat tutorial singkat</button><h2>Cara penggunaan</h2><div class="card"><ol class="steps">
@@ -248,12 +248,12 @@ function render(){
 <h2>Pertanyaan umum</h2><div class="card">
 <details><summary>Bagaimana angka hari dihitung?</summary><div class="mute">Saldo dibagi pengeluaran per hari. Pengeluaran per hari diambil yang lebih besar antara pengeluaran wajib bulanan dibagi 30 dan rata-rata pengeluaran tercatat 30 hari terakhir.</div></details>
 <details><summary>Bagaimana mencatat DP dan pelunasan?</summary><div class="mute">Catat DP sebagai pemasukan “Sudah dibayar”. Catat sisa pelunasannya sebagai pemasukan “Belum dibayar” dengan tanggal jatuh tempo. Saat klien melunasi, tap “Sudah dibayar” di tab Piutang.</div></details>
-<details><summary>Salah catat, bagaimana?</summary><div class="mute">Buka Riwayat, tap × pada catatan itu, lalu catat ulang dengan angka yang benar.</div></details>
-<details><summary>Apakah data saya aman?</summary><div class="mute">Data hanya tersimpan di browser perangkat ini. Kalau data browser dihapus atau ganti HP, catatan ikut hilang. Belum ada backup.</div></details></div>
+<details><summary>Salah catat, bagaimana?</summary><div class="mute">Buka Riwayat, lalu tap ✎ untuk mengubah catatan (termasuk tanggalnya) atau × untuk menghapusnya.</div></details>
+<details><summary>Apakah data saya aman?</summary><div class="mute">Catatan keuangan hanya tersimpan di browser perangkat ini. Kalau data browser dihapus atau HP hilang, catatan ikut hilang. Cadangkan rutin lewat tab Atur (Cadangkan JSON), lalu Pulihkan di perangkat baru.</div></details></div>
 <h2>Konsultasi</h2><div class="card"><div class="mute" style="margin-bottom:10px">Ada yang tidak jelas soal aplikasi, atau ingin memberi masukan? Tanya langsung lewat WhatsApp.</div>${waBtn("Konsultasi lewat WhatsApp")}</div>`}
  const piu=c.wait.length?` (${c.wait.length})`:"";
  a.innerHTML=h+`<button class="fab" aria-label="Catat transaksi" data-act="open">+</button>
- <nav class="nav"><div>${[["home","Beranda"],["piutang","Piutang"+piu],["riwayat","Riwayat"],["atur","Atur"],["bantuan","Bantuan"]].map(([k,n])=>`<button data-act="tab" data-v="${k}" class="${tab===k?"on":""}">${n}</button>`).join("")}</div></nav>`+(sheet?sheetHtml():"")+(up!==null?upHtml():"");hints();drawTour();
+ <nav class="nav"><div>${[["home","Beranda"],["piutang","Piutang"+piu],["riwayat","Riwayat"],["atur","Atur"],["bantuan","Bantuan"]].map(([k,n])=>`<button data-act="tab" data-v="${k}" class="${tab===k?"on":""}">${n}</button>`).join("")}</div></nav>`+(sheet?sheetHtml():"")+(up!==null?upHtml():"")+(priv?privHtml():"");hints();drawTour();
 }
 function waBtn(t,sm){const m=encodeURIComponent("Halo, saya mau konsultasi soal aplikasi Napas. Bidang kerja saya: "+P[S.bidang].n+".");const c="btn wa"+(sm?" sm":"");
  return WA_NUMBER?`<a class="${c}" href="https://wa.me/${WA_NUMBER}?text=${m}" target="_blank" rel="noopener">${t}</a>`:`<button class="${c}" data-act="nowa">${t}</button>`}
@@ -267,17 +267,38 @@ function onboard(){
 }
 function sheetHtml(){
  const p=P[S.bidang],d=sheet,inn=d.type==="in";
- return`<div class="sheet" data-act="close"><div data-stop><div class="row"><h2 style="margin:0">Catat</h2><button class="x" data-act="close" aria-label="Tutup">×</button></div>
+ return`<div class="sheet" data-act="close"><div data-stop><div class="row"><h2 style="margin:0">${d.id?"Ubah catatan":"Catat"}</h2><button class="x" data-act="close" aria-label="Tutup">×</button></div>
  <div class="seg" style="margin-top:12px"><button class="${inn?"on":""}" data-act="stype" data-v="in">Pemasukan</button><button class="${inn?"":"on"}" data-act="stype" data-v="out">Pengeluaran</button></div>
  <label for="f1">Nominal (Rp)</label><input id="f1" inputmode="numeric" autofocus value="${esc(d.amt||"")}" maxlength="16">
  <label for="f2">${inn?"Klien / "+p.item.toLowerCase():"Keterangan"}</label><input id="f2" value="${esc(d.label||"")}" placeholder="${inn?"Budi, logo toko":"Bensin"}">
  ${inn?`<label>Status</label><div class="seg"><button class="${d.status==="paid"?"on":""}" data-act="sstat" data-v="paid">Sudah dibayar</button><button class="${d.status==="wait"?"on":""}" data-act="sstat" data-v="wait">Belum dibayar</button></div>
  ${d.status==="wait"?`<label for="f3">Jatuh tempo</label><input id="f3" type="date" value="${d.due||""}">`:""}`
  :`<label for="f4">Kategori</label><select id="f4">${p.cat.map(c=>`<option ${c===d.cat?"selected":""}>${c}</option>`).join("")}</select>`}
- <button class="btn" style="margin-top:18px;width:100%" data-act="add">Simpan</button></div></div>`;
+ <label for="f5">Tanggal</label><input id="f5" type="date" max="${today()}" value="${d.date||today()}">
+ <button class="btn" style="margin-top:18px;width:100%" data-act="add">${d.id?"Simpan perubahan":"Simpan"}</button></div></div>`;
 }
+function dl(name,text,type){try{const u=URL.createObjectURL(new Blob([text],{type}));const a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast("File "+name+" diunduh.")}catch(e){toast("Unduhan tidak didukung di sini. Buka aplikasi di browser biasa.")}}
+function exportCSV(){const q=v=>`"${String(v==null?"":v).replace(/"/g,'""')}"`;
+ const rows=[["Tanggal","Jenis","Keterangan","Kategori","Status","Jatuh tempo","Nominal"]];
+ [...S.tx].sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>rows.push([x.date,x.type==="in"?"Pemasukan":"Pengeluaran",x.label,x.cat||"",x.type==="in"?(x.status==="paid"?"Sudah dibayar":"Belum dibayar"):"",x.due||"",x.amt]));
+ dl("napas-catatan-"+today()+".csv","\ufeff"+rows.map(r=>r.map(q).join(";")).join("\r\n"),"text/csv;charset=utf-8")}
+function exportJSON(){dl("napas-cadangan-"+today()+".json",JSON.stringify({app:"napas",v:1,diekspor:today(),data:S}),"application/json")}
+function restore(f){const r=new FileReader();r.onload=()=>{try{const j=JSON.parse(r.result),d=j&&j.app==="napas"?j.data:null;if(!d||!Array.isArray(d.tx))throw 0;
+  d.tx=d.tx.filter(x=>x&&typeof x.amt==="number"&&x.date&&(x.type==="in"||x.type==="out"));
+  if(!confirm("Ganti data sekarang dengan isi file cadangan ("+d.tx.length+" catatan)?"))return;
+  S={...S,...d,setup:true};save();toast("Data dipulihkan.");render()}catch(e){toast("File cadangan tidak valid.")}};r.readAsText(f)}
+function privHtml(){return`<div class="sheet" data-act="privclose"><div data-stop><div class="row"><h2 style="margin:0">Kebijakan Privasi</h2><button class="x" data-act="privclose" aria-label="Tutup">×</button></div>
+<div style="font-size:14px;margin-top:10px"><p class="mute" style="margin:0 0 10px">Terakhir diperbarui 25 November 2026.</p>
+<p><b>Data yang disimpan pengelola.</b> Saat mendaftar trial atau memakai kode akses: nama, nomor WhatsApp, kode akses, tanggal mulai dan berakhir langganan, serta ID perangkat acak. Data ini disimpan di Google Sheets milik pengelola Napas (layanan Google, server dapat berada di luar Indonesia).</p>
+<p><b>Data yang tidak dikirim.</b> Catatan keuanganmu (pemasukan, pengeluaran, piutang, saldo) hanya tersimpan di perangkatmu dan tidak dikirim ke pengelola.</p>
+<p><b>Tujuan.</b> Memverifikasi akses, mengelola masa percobaan dan langganan, serta menghubungimu lewat WhatsApp soal akses, perpanjangan, atau bantuan.</p>
+<p><b>Pembagian data.</b> Data tidak dijual. Data hanya dapat diakses pengelola dan penyedia layanan yang dipakai (Google), atau bila diwajibkan hukum.</p>
+<p><b>Hak kamu.</b> Kamu dapat meminta salinan, perbaikan, atau penghapusan datamu lewat WhatsApp +62 877-3821-5552.</p>
+<p><b>Tanggung jawabmu.</b> Karena catatan ada di perangkatmu, cadangkan lewat menu Atur. Jika data browser terhapus atau perangkat hilang tanpa cadangan, catatan tidak dapat dipulihkan.</p>
+<p><b>Perubahan.</b> Kebijakan ini dapat diperbarui, dan versi terbaru selalu tampil di sini.</p></div>
+<button class="btn" style="width:100%;margin-top:6px" data-act="privclose">Mengerti</button></div></div>`}
 function keep(){const g=i=>{const e=$(i);return e?e.value:undefined};
- if(g("#f1")!==undefined){sheet.amt=g("#f1");sheet.label=g("#f2");if(g("#f3")!==undefined)sheet.due=g("#f3");if(g("#f4")!==undefined)sheet.cat=g("#f4")}}
+ if(g("#f1")!==undefined){sheet.amt=g("#f1");sheet.label=g("#f2");if(g("#f3")!==undefined)sheet.due=g("#f3");if(g("#f4")!==undefined)sheet.cat=g("#f4");if(g("#f5")!==undefined)sheet.date=g("#f5")}}
 function toast(t){const e=document.createElement("div");e.className="toast";e.textContent=t;document.body.appendChild(e);setTimeout(()=>e.remove(),4200)}
 const num=v=>parseInt(String(v||"").replace(/\D/g,"").slice(0,12))||0;
 const fmtN=n=>n?Number(n).toLocaleString("id-ID"):"";
@@ -293,32 +314,40 @@ document.addEventListener("click",e=>{
  if(a==="pickb"){draft.b=v;draft.w=$("#ow").value;draft.a=$("#oa").value;S.bidang=v;render();$("#ow").value=draft.w;$("#oa").value=draft.a;hints()}
  else if(a==="start"){S.wajib=num($("#ow").value);S.awal=num($("#oa").value);S.setup=true;save();if(!S.tourDone){tour=0;tab="home"}render()}
  else if(a==="tab"){tab=v;render();window.scrollTo(0,0)}
- else if(a==="open"){sheet={type:"in",status:"paid",cat:P[S.bidang].cat[0]};render()}
+ else if(a==="open"){sheet={type:"in",status:"paid",cat:P[S.bidang].cat[0],date:today()};render()}
  else if(a==="close"){sheet=null;render()}
  else if(a==="stype"){keep();sheet.type=v;render()}
  else if(a==="sstat"){keep();sheet.status=v;render()}
  else if(a==="add"){keep();const amt=num(sheet.amt);if(!amt||!String(sheet.label||"").trim()){toast("Isi nominal dan keterangan dulu.");return}
-  const x={id:Date.now(),type:sheet.type,amt,label:sheet.label.trim(),date:today()};
-  if(x.type==="in"){x.status=sheet.status;if(x.status==="wait")x.due=sheet.due||""}else x.cat=sheet.cat;
-  S.tx.push(x);save();
-  if(x.type==="in"&&x.status==="paid"){const p=P[S.bidang];toast("Dibagi: "+p.pots.map((n,i)=>n+" "+rp(amt*p.pct[i]/100)).join(" · "))}
+  const dt=sheet.date||today();if(dt>today()){toast("Tanggal tidak boleh di masa depan.");return}
+  const x={id:sheet.id||Date.now(),type:sheet.type,amt,label:sheet.label.trim(),date:dt};
+  if(x.type==="in"){x.status=sheet.status||"paid";if(x.status==="wait")x.due=sheet.due||""}else x.cat=sheet.cat;
+  if(sheet.id){const i=S.tx.findIndex(t=>t.id===sheet.id);if(i>=0)S.tx[i]=x;toast("Perubahan tersimpan.")}else S.tx.push(x);save();
+  if(!sheet.id&&x.type==="in"&&x.status==="paid"){const p=P[S.bidang];toast("Dibagi: "+p.pots.map((n,i)=>n+" "+rp(amt*p.pct[i]/100)).join(" · "))}
   sheet=null;render()}
  else if(a==="lunas"){const x=S.tx.find(t=>t.id===id);if(x){x.status="paid";x.date=today();save();toast("Tercatat lunas: "+rp(x.amt));render()}}
  else if(a==="tagih"){const x=S.tx.find(t=>t.id===id);const m=`Halo, saya mengingatkan tagihan ${x.label} sebesar ${rp(x.amt)}${x.due?" (jatuh tempo "+tgl(x.due)+")":""}. Mohon konfirmasi jadwal pembayarannya ya. Terima kasih.`;
   (navigator.clipboard?navigator.clipboard.writeText(m):Promise.reject()).then(()=>toast("Pesan tagih tersalin."),()=>toast(m))}
+ else if(a==="priv"){e.preventDefault();priv=true;render()}
+ else if(a==="privclose"){priv=false;render()}
+ else if(a==="expcsv"){exportCSV()}
+ else if(a==="expjson"){exportJSON()}
+ else if(a==="restore"){const f=$("#rf");if(f)f.click()}
+ else if(a==="edit"){const x=S.tx.find(t=>t.id===id);if(x){sheet={...x,amt:fmtN(x.amt),cat:x.cat||P[S.bidang].cat[0]};render()}}
  else if(a==="trialopen"){trialOpen=true;render();const t=$("#tnama");if(t)t.focus()}
  else if(a==="upgrade"){up=1;render()}
  else if(a==="uplan"){up=+v;render()}
  else if(a==="upclose"){up=null;render()}
  else if(a==="trial"){const n=($("#tnama").value||"").trim(),w=($("#twa").value||"").trim();
   if(n.length<2||w.replace(/\D/g,"").length<9){lic={ok:false,msg:"data_kurang",src:"trial",nama:n,wa:w};render();return}
+  if(!($("#tcek")&&$("#tcek").checked)){lic={ok:false,msg:"setuju",src:"trial",nama:n,wa:w};render();return}
   lic=null;render();daftar(n,w).then(r=>{if(r.ok){lic={ok:true,kode:r.kode,sampai:r.sampai,paket:r.paket};if(S.setup&&!S.tourDone)tour=0}else lic={ok:false,msg:r.msg,src:"trial",nama:n,wa:w};render();if(r.ok)toast("Kode aksesmu: "+r.kode+". Simpan ya, dipakai kalau masuk dari perangkat lain.")})}
  else if(a==="login"){const k=($("#kode").value||"").trim().toUpperCase();if(!k){toast("Isi kode akses dulu.");return}lic=null;render();verif(k).then(r=>{lic=r;if(r.ok&&S.setup&&!S.tourDone)tour=0;render()})}
  else if(a==="tour"){tour=0;tab="home";window.scrollTo(0,0);render()}
  else if(a==="tnext"){tour++;if(tour>=TOUR.length){tour=null;S.tourDone=true;save();tab="home"}else tab=TOUR[tour].tab;window.scrollTo(0,0);render()}
  else if(a==="tclose"){tour=null;S.tourDone=true;save();tab="home";render()}
  else if(a==="nowa"){toast("Nomor konsultasi belum tersedia.")}
- else if(a==="del"){S.tx=S.tx.filter(t=>t.id!==id);save();render()}
+ else if(a==="del"){if(!confirm("Hapus catatan ini?"))return;S.tx=S.tx.filter(t=>t.id!==id);save();render()}
  else if(a==="saveset"){S.bidang=$("#sb").value;S.wajib=num($("#sw").value);S.awal=num($("#sa").value);save();toast("Tersimpan.");render()}
  else if(a==="reset"){if(confirm("Hapus semua data di perangkat ini?")){S={setup:false,bidang:"desain",wajib:0,awal:0,tx:[]};save();tab="home";render()}}
 });
@@ -328,6 +357,7 @@ document.addEventListener("input",e=>{const t=e.target;if(t.tagName!=="INPUT"||t
  let c=0,n=0;while(c<t.value.length&&n<digits){if(/\d/.test(t.value[c]))n++;c++}
  try{t.setSelectionRange(c,c)}catch(_){}
  hint(t)});
+document.addEventListener("change",e=>{if(e.target.id==="rf"&&e.target.files&&e.target.files[0]){restore(e.target.files[0]);e.target.value=""}});
 document.addEventListener("change",e=>{if(e.target.id==="sb"){S.bidang=e.target.value;save();render();$("#sb").value=S.bidang}});
 render();setupPWA();boot();
 </script>
