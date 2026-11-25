@@ -98,7 +98,7 @@ input,select{background:var(--input);box-shadow:inset 0 2px 4px rgba(0,0,0,.1)}
 <div id="app"></div>
 <script>
 const WA_NUMBER="6287738215552";
-const LICENSE_URL="https://script.google.com/macros/s/AKfycbwnvnxXu5cAgAya1MlKfZm5QDJcxBom-jkNKs5ouoirLAGI_Fzid2P9baZTYZ0vtfsz/exec"; /* tempel URL web app Google Apps Script di sini; kosong = tanpa kunci akses */
+const LICENSE_URL=""; /* tempel URL web app Google Apps Script di sini; kosong = tanpa kunci akses */
 const ICON=`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><defs><linearGradient id="ng" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2FB5A5"/><stop offset="1" stop-color="#08302B"/></linearGradient><linearGradient id="nc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset="1" stop-color="#E59A0C"/></linearGradient><linearGradient id="ns" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><clipPath id="nk"><rect width="512" height="512" rx="112"/></clipPath></defs><g clip-path="url(#nk)"><rect width="512" height="512" fill="url(#ng)"/><ellipse cx="256" cy="40" rx="330" ry="230" fill="url(#ns)"/></g><g fill="none" stroke="#fff" stroke-width="30" stroke-linecap="round"><path d="M112 232H290a44 44 0 1 0-44-44"/><path d="M112 300H370a52 52 0 1 1-52 52"/><path d="M112 368H230"/></g><circle cx="388" cy="150" r="42" fill="url(#nc)" stroke="#fff" stroke-opacity=".6" stroke-width="6"/></svg>`;
 function setupPWA(){try{
  const uri="data:image/svg+xml,"+encodeURIComponent(ICON);
@@ -123,7 +123,7 @@ const TOUR=[
 let tour=null,lic=LICENSE_URL?null:{ok:true,demo:true};
 const TSEL=["#hd",".hero",".fab",'.nav button[data-v="piutang"]','.nav button[data-v="riwayat"]','.nav button[data-v="atur"]','.nav button[data-v="bantuan"]'];
 const PLANS=[{n:"1 bulan",h:5000,per:"Rp5.000 per bulan"},{n:"6 bulan",h:20000,per:"Rp3.333 per bulan",hemat:"Hemat 33%"},{n:"1 tahun",h:30000,per:"Rp2.500 per bulan",hemat:"Hemat 50%"}];
-let up=null;
+let up=null,trialOpen=false;
 function upHtml(){const pl=PLANS[up],msg=encodeURIComponent(`Halo, saya mau upgrade Napas paket ${pl.n} (${rp(pl.h)}). Kode akses: ${(lic&&lic.kode)||"-"}.`);
  return`<div class="sheet" data-act="upclose"><div data-stop><div class="row"><h2 style="margin:0">Upgrade Napas</h2><button class="x" data-act="upclose" aria-label="Tutup">×</button></div><p class="mute" style="margin:6px 0 12px">Pilih paket, lalu konfirmasi lewat WhatsApp.</p><div class="pick">${PLANS.map((x,i)=>`<button data-act="uplan" data-v="${i}" class="${i===up?"on":""}"><span class="row"><b>${x.n}</b><b>${rp(x.h)}</b></span><span class="mute">${x.per}${x.hemat?" · "+x.hemat:""}</span></button>`).join("")}</div><a class="btn wa" style="margin-top:16px" href="https://wa.me/${WA_NUMBER}?text=${msg}" target="_blank" rel="noopener">Konfirmasi lewat WhatsApp</a><p class="mute" style="font-size:12px;margin:10px 0 0">Akses diperpanjang setelah pembayaran dikonfirmasi admin.</p></div></div>`}
 function drawTour(){let o=document.getElementById("tourbox");
@@ -158,7 +158,7 @@ async function boot(){if(!LICENSE_URL){if(S.setup&&!S.tourDone)tour=0;render();r
 function gateHtml(){if(lic===null)return`<div class="mute" style="text-align:center;margin-top:30vh">Memeriksa akses…</div>`;
  const exp=lic.msg==="kedaluwarsa",m=encodeURIComponent(exp?"Halo, saya mau perpanjang akses Napas.":"Halo, saya mau minta kode akses Napas (gratis 30 hari).");
  return`<div style="text-align:center;margin-top:7vh"><div class="logo" style="width:96px;margin:0 auto">${ICON}</div><h1 style="font-size:30px;margin:14px 0 4px">Napas</h1><p class="mute">Masukkan kode akses untuk memakai aplikasi. Pengguna baru gratis 30 hari.</p></div>
- <div class="card"><b>Pengguna baru?</b><div class="mute">Coba gratis 30 hari, tanpa perlu kode.</div><label for="tnama">Nama</label><input id="tnama" autocomplete="name" value="${esc(lic.nama||"")}"><label for="twa">Nomor WhatsApp</label><input id="twa" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" value="${esc(lic.wa||"")}">${lic.msg&&lic.src==="trial"?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}<button class="btn" style="margin-top:14px;width:100%" data-act="trial">Coba gratis 30 hari</button></div>
+ <div class="card"><b>Pengguna baru?</b><div class="mute">Coba gratis 30 hari, tanpa perlu kode.</div>${(trialOpen||lic.src==="trial")?`<label for="tnama">Nama</label><input id="tnama" autocomplete="name" value="${esc(lic.nama||"")}"><label for="twa">Nomor WhatsApp</label><input id="twa" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" value="${esc(lic.wa||"")}">${lic.msg&&lic.src==="trial"?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}<button class="btn" style="margin-top:14px;width:100%" data-act="trial">Mulai trial 30 hari</button>`:`<button class="btn" style="margin-top:12px;width:100%" data-act="trialopen">Coba GRATIS 30 hari</button>`}</div>
  <div class="card"><b>Sudah punya kode?</b><label for="kode">Kode akses</label><input id="kode" autocomplete="off" autocapitalize="characters" placeholder="Contoh: NAPAS-1234">${lic.msg&&lic.src!=="trial"?`<div class="late" style="margin-top:8px">${LMSG[lic.msg]||""}</div>`:""}
  <button class="btn" style="margin-top:14px;width:100%" data-act="login">Masuk</button></div>
  <a class="btn wa" href="https://wa.me/${WA_NUMBER}?text=${m}" target="_blank" rel="noopener">${exp?"Perpanjang":"Minta kode"} lewat WhatsApp</a>`}
@@ -306,6 +306,7 @@ document.addEventListener("click",e=>{
  else if(a==="lunas"){const x=S.tx.find(t=>t.id===id);if(x){x.status="paid";x.date=today();save();toast("Tercatat lunas: "+rp(x.amt));render()}}
  else if(a==="tagih"){const x=S.tx.find(t=>t.id===id);const m=`Halo, saya mengingatkan tagihan ${x.label} sebesar ${rp(x.amt)}${x.due?" (jatuh tempo "+tgl(x.due)+")":""}. Mohon konfirmasi jadwal pembayarannya ya. Terima kasih.`;
   (navigator.clipboard?navigator.clipboard.writeText(m):Promise.reject()).then(()=>toast("Pesan tagih tersalin."),()=>toast(m))}
+ else if(a==="trialopen"){trialOpen=true;render();const t=$("#tnama");if(t)t.focus()}
  else if(a==="upgrade"){up=1;render()}
  else if(a==="uplan"){up=+v;render()}
  else if(a==="upclose"){up=null;render()}
